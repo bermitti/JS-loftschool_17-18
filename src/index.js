@@ -7,6 +7,12 @@
  * @return {Element}
  */
 function createDivWithText(text) {
+    let elem;
+    
+    elem = document.createElement('div');
+    elem.innerHTML = text;
+
+    return elem;
 }
 
 /**
@@ -16,6 +22,12 @@ function createDivWithText(text) {
  * @return {Element}
  */
 function createAWithHref(hrefValue) {
+    let elem;
+
+    elem = document.createElement('a');
+    elem.setAttribute('href', hrefValue);
+
+    return elem;
 }
 
 /**
@@ -25,6 +37,7 @@ function createAWithHref(hrefValue) {
  * @param {Element} where - куда вставлять
  */
 function prepend(what, where) {
+    where.insertBefore(what, where.firstElementChild);
 }
 
 /**
@@ -42,6 +55,17 @@ function prepend(what, where) {
  * т.к. следующим соседом этих элементов является элемент с тегом P
  */
 function findAllPSiblings(where) {
+    let arr;
+    let result = [];
+
+    arr = where.children;
+    for (let i = 0; i < arr.length - 1; i++) {
+        if (arr[i].nextElementSibling && arr[i].nextElementSibling.tagName == 'P') {
+            result.push(arr[i]);
+        }
+    }
+
+    return result;
 }
 
 /**
@@ -55,8 +79,8 @@ function findAllPSiblings(where) {
 function findError(where) {
     var result = [];
 
-    for (var i = 0; i < where.childNodes.length; i++) {
-        result.push(where.childNodes[i].innerText);
+    for (var i = 0; i < where.children.length; i++) {
+        result.push(where.children[i].innerText);
     }
 
     return result;
@@ -76,6 +100,17 @@ function findError(where) {
  * должно быть преобразовано в <div></div><p></p>
  */
 function deleteTextNodes(where) {
+    [...where.childNodes].forEach(elem => {
+        if (elem.nodeType == '3') {
+            where.removeChild(elem);
+        }
+    });
+
+    // for (var child of where.childNodes) {
+    //     if (child.nodeType === 3) {
+    //         where.removeChild(child);
+    //     }
+    // }
 }
 
 /**
@@ -88,9 +123,25 @@ function deleteTextNodes(where) {
  * после выполнения функции, дерево <span> <div> <b>привет</b> </div> <p>loftchool</p> !!!</span>
  * должно быть преобразовано в <span><div><b></b></div><p></p></span>
  */
-function deleteTextNodesRecursive(where) {
-}
+// function deleteTextNodesRecursive(where) {
+//     [...where.childNodes].forEach(function (elem) {
+//         if (elem.nodeType == 3 ) {
+//             where.removeChild(elem);
+//         } else if (elem.nodeType == 1 && elem.length != 0) {
+//             deleteTextNodesRecursive(elem);
+//         }
+//     })
+// }
 
+function deleteTextNodesRecursive(where) {
+    [...where.childNodes].forEach(function (elem) {
+        if (elem.nodeType == 3 ) {
+            where.removeChild(elem);
+        } else if (elem.childNodes) {
+            deleteTextNodesRecursive(elem);
+        }
+    })
+}
 /**
  * *** Со звездочкой ***
  * Необходимо собрать статистику по всем узлам внутри элемента root и вернуть ее в виде объекта
@@ -114,6 +165,44 @@ function deleteTextNodesRecursive(where) {
  * }
  */
 function collectDOMStat(root) {
+    let result = {
+        tags: {},
+        classes: {},
+        texts: 0
+    };
+
+    if (root.childNodes) {
+        [...root.childNodes].forEach(node => check(node));
+    }
+
+    function check(elem) {
+        if (elem.nodeType == 3) {
+            result.texts++; 
+        } else if (elem.nodeType == 1) {
+            let name = elem.tagName;
+            let elementClasses = elem.classList;
+
+            if (result.tags[name]) {
+                result.tags[name]++;
+            } else {
+                result.tags[name] = 1;
+            }
+
+            [...elementClasses].forEach(item => {
+                if (result.classes[item]) {
+                    result.classes[item]++;
+                } else {
+                    result.classes[item] = 1;
+                }
+            })
+        }
+        // проверка дочерних узлов
+        if (elem.childNodes) {
+            [...elem.childNodes].forEach(node => check(node));
+        }
+    }
+
+    return result;
 }
 
 /**
@@ -121,7 +210,7 @@ function collectDOMStat(root) {
  * Функция должна отслеживать добавление и удаление элементов внутри элемента where
  * Как только в where добавляются или удаляются элемента,
  * необходимо сообщать об этом при помощи вызова функции fn со специальным аргументом
- * В качестве аргумента должен быть передан объек с двумя свойствами:
+ * В качестве аргумента должен быть передан объект с двумя свойствами:
  * - type: типа события (insert или remove)
  * - nodes: массив из удаленных или добавленных элементов (а зависимости от события)
  * Отслеживание должно работать вне зависимости от глубины создаваемых/удаляемых элементов
@@ -148,6 +237,23 @@ function collectDOMStat(root) {
  * }
  */
 function observeChildNodes(where, fn) {
+    // создаём экземпляр MutationObserver
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.addedNodes.length) {
+                fn( { type: 'insert', nodes: [...mutation.addedNodes] } );
+            }
+            if (mutation.removedNodes.length) {
+                fn( { type: 'remove', nodes: [...mutation.removedNodes] } );
+            }
+        });    
+    });
+
+    // конфигурация observer:
+    const config = { attributes: true, childList: true, characterData: true, subtree: true  };
+ 
+    // передаём в качестве аргументов целевой элемент и его конфигурацию
+    observer.observe(where, config);
 }
 
 export {
