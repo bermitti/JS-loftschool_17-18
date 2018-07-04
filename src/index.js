@@ -19,7 +19,7 @@ function addListener(eventName, target, fn) {
  * @param {function} fn - обработчик
  */
 function removeListener(eventName, target, fn) {
-    
+    target.removeEventListener(eventName, fn);
 }
 
 /**
@@ -29,6 +29,7 @@ function removeListener(eventName, target, fn) {
  * @param {Element} target - элемент, на который нужно добавить обработчик
  */
 function skipDefault(eventName, target) {
+    target.addEventListener(eventName, e => e.preventDefault());
 }
 
 /**
@@ -37,7 +38,16 @@ function skipDefault(eventName, target) {
  * @param {Element} target - элемент, на который нужно добавить обработчик
  */
 function emulateClick(target) {
+    target.click();
 }
+
+// # 2
+// function emulateClick(target) {
+//     let event = new CustomEvent("click");
+
+//     // выполнить для любого элемента
+//     target.dispatchEvent(event);
+// }
 
 /**
  * Функция должна добавить такой обработчик кликов к элементу target
@@ -47,6 +57,13 @@ function emulateClick(target) {
  * @param {function} fn - функция, которую нужно вызвать при клике на элемент BUTTON внутри target
  */
 function delegate(target, fn) {
+    let handler = function (e) {
+        if (e.target.tagName == 'BUTTON') {
+            fn();
+        }
+    }
+
+    target.addEventListener('click', handler);
 }
 
 /**
@@ -59,7 +76,28 @@ function delegate(target, fn) {
  * @param {function} fn - обработчик
  */
 function once(target, fn) {
+    target.addEventListener('click', fn, { once: true });
+    // once: Boolean указывает, что слушатель должен быть вызван не более одного раза после добавления. 
+    // Если true, слушатель автоматически удаляется при вызове.
 }
+
+// #2
+// function once(target, fn) {
+//     let handler = function () {
+//         fn();
+//         target.removeEventListener('click', handler);
+//     }
+
+//     target.addEventListener('click', handler);
+// }
+
+// #3
+// function once(target, fn) {
+//     target.addEventListener("click", fn);
+//     target.addEventListener("click", () => {
+//       target.removeEventListener("click", fn);
+//     });
+//   }
 
 export {
     addListener,
