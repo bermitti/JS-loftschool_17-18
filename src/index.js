@@ -250,7 +250,7 @@ function observeChildNodes(where, fn) {
     });
 
     // конфигурация observer:
-    const config = { attributes: true, childList: true, characterData: true, subtree: true  };
+    const config = { attributes: true, childList: true, characterData: true, subtree: true };
  
     // передаём в качестве аргументов целевой элемент и его конфигурацию
     observer.observe(where, config);
