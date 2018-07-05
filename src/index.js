@@ -9,10 +9,15 @@
 function delayPromise(seconds) {
     return new Promise(function (resolve) {
         setTimeout(function () {
-            return resolve();
+            return resolve(seconds);
         }, seconds*1000)
     })
 }
+// проверка для себя
+// delayPromise(3)
+//     .then( (res) => 
+//         console.log(`привет, прошло ${res}сек`)
+//     )
 
 // #2
 // function delayPromise(seconds) {
